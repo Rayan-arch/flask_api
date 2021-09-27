@@ -16,7 +16,10 @@ def add():
 
     connection = get_connection()
     cursor = connection.cursor()
-    cursor.execute('INSERT INTO authors (first_name, last_name) VALUES (%s,%s) RETURNING id;', (data['first_name'], data['last_name']))
+    cursor.execute('INSERT INTO authors (first_name, last_name) VALUES (%s,%s) RETURNING id;',
+                   (data['first_name'],
+                    data['last_name']
+                    ))
     author_id = cursor.fetchone()[0]
     connection.commit()
 
