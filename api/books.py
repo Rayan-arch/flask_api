@@ -1,49 +1,38 @@
-from psycopg2 import extras
+from api.repositories import AuthorsRepository, BooksRepository
 from json import dumps, loads
-from flask import Response,request, abort
-from db import get_connection
+from flask import Response, request, abort
 
 
 def get_all():
-    connection = get_connection()
-    cursor = connection.cursor(cursor_factory=extras.RealDictCursor)
-    cursor.execute('SELECT id, title, author_id, description FROM books;')
+    books = BooksRepository()
+    data = books.get_books()
 
-    return Response(dumps(cursor.fetchall()).encode('utf-8'), mimetype='appictation/jsone')
+    return Response(dumps(data.fetchall()).encode('utf-8'), mimetype='appictation/jsone')
 
 
 def add_book():
-    data = loads(request.data.decode('utf-8'))
+    user_data = loads(request.data.decode('utf-8'))
+    if len(user_data) is 3:
+        title, author_id, description = user_data.values()
+        author = AuthorsRepository()
+        if author.check_exists(author_id) is not None:
+            book = BooksRepository()
+            data = book.add_one(title, author_id, description)
 
-    connection = get_connection()
-    cursor = connection.cursor()
-    cursor.execute('SELECT id, first_name, last_name FROM authors WHERE id=%s;',(data['author_id'],))
-    author = cursor.fetchone()
-    if author is None:
-        abort(404)
-    cursor.execute('INSERT INTO books (title, author_id, description) VALUES (%s,%s,%s) RETURNING id;',
-                   (data['title'],
-                    data['author_id'],
-                    data['description']
-                    ))
-    book_id = cursor.fetchone()[0]
-    connection.commit()
+            return Response(dumps({
+                "id": data
+            }), mimetype='application/json', status=201)
 
-    return Response(dumps({
-        "id": book_id
-    }), mimetype='application/json', status=201)
+    abort(404, 'Wrong data, please input dictionary with title,author_id,description only.')
+
 
 def delete_book(book_id):
-    connection = get_connection()
-    cursor = connection.cursor()
-    cursor.execute('SELECT id, title, description FROM books WHERE id=%s;',(book_id,))
-    book = cursor.fetchone()
-    if book is None:
-        abort(404)
+    books = BooksRepository()
+    if books.check_exists(book_id) is None:
+        abort(404, 'Book does not exists, or have been already deleted.')
 
-    cursor.execute('DELETE FROM books WHERE id=%s',(book_id,))
-    connection.commit()
+    books.delete_books(book_id)
 
     return Response(dumps({
         "status": "ok"
-    }),mimetype='application/json',status=200)
+    }), mimetype='application/json', status=200)

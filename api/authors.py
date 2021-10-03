@@ -1,42 +1,37 @@
-from psycopg2 import extras
 from json import dumps, loads
-from flask import Response,request, abort
-from db import get_connection
+from flask import Response, request, abort
+from api.repositories import AuthorsRepository
 
 
 def index():
-    connection = get_connection()
-    cursor = connection.cursor(cursor_factory=extras.RealDictCursor)
-    cursor.execute('SELECT id, first_name, last_name FROM authors;')
+    author = AuthorsRepository()
+    data = author.get_authors()
 
-    return Response(dumps(cursor.fetchall()), mimetype='appictation/jsone')
+    return Response(dumps(data), mimetype='appictation/json')
+
 
 def add():
-    data = loads(request.data.decode('utf-8'))
+    user_data = loads(request.data.decode('utf-8'))
+    if len(user_data) == 2:
+        first_name = user_data.get('first_name')
+        last_name = user_data.get('last_name')
+        author = AuthorsRepository()
+        data = author.add_author(first_name, last_name)
 
-    connection = get_connection()
-    cursor = connection.cursor()
-    cursor.execute('INSERT INTO authors (first_name, last_name) VALUES (%s,%s) RETURNING id;',
-                   (data['first_name'],
-                    data['last_name']
-                    ))
-    author_id = cursor.fetchone()[0]
-    connection.commit()
+        return Response(dumps({
+            "id": data
+        }), mimetype='application/json', status=201)
 
-    return Response(dumps({
-        "id": author_id
-    }),mimetype='application/json', status=201)
+    abort(404, 'Wrong data, please input dictionary with first & last name only.')
+
 
 def delete(author_id):
-    connection = get_connection()
-    cursor = connection.cursor(cursor_factory=extras.RealDictCursor)
-    cursor.execute('SELECT id, first_name, last_name FROM authors WHERE id = %s;', (author_id,))
-    author = cursor.fetchone()
-    if author is None:
-        abort(404)
+    author = AuthorsRepository()
+    if author.check_exists(author_id) is not None:
+        author.delete_author(author_id)
 
-    cursor.execute('DELETE FROM authors WHERE id=%s', (author_id,))
-    connection.commit()
-    return Response(dumps({
-        "status": "ok"
-    }), mimetype='application/json', status=200)
+        return Response(dumps({
+            "status": "ok"
+        }), mimetype='application/json', status=200)
+
+    abort(404, 'Author does not exists or have been already deleted.')
