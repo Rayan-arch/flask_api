@@ -1,6 +1,8 @@
 from api.repositories import AuthorsRepository, BooksRepository
-from json import dumps, loads
+from pydantic import ValidationError
 from flask import Response, request, abort
+from json import dumps, loads
+from models import Books
 
 
 def get_all():
@@ -11,19 +13,27 @@ def get_all():
 
 
 def add_book():
+    repository = AuthorsRepository()
     user_data = loads(request.data.decode('utf-8'))
-    if len(user_data) is 3:
-        title, author_id, description = user_data.values()
-        author = AuthorsRepository()
-        if author.check_exists(author_id) is not None:
-            book = BooksRepository()
-            data = book.add_one(title, author_id, description)
+    try:
+        book = Books(**user_data)
+
+        if repository.check_exists(book.author_id) is not None:
+            books = BooksRepository()
+            data = books.add_one(book.title, book.author_id, book.description)
 
             return Response(dumps({
                 "id": data
             }), mimetype='application/json', status=201)
+        else:
+            return Response(dumps({"error": "Author does not exists."}),mimetype='application/json', status=400)
 
-    abort(404, 'Wrong data, please input dictionary with title,author_id,description only.')
+    except ValidationError as error:
+        return Response(
+            error.json(),
+            mimetype='application/json',
+            status=400
+        )
 
 
 def delete_book(book_id):

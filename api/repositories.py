@@ -19,10 +19,10 @@ class AuthorsRepository:
 
     def add_author(self, *args):
         self.cursor.execute('INSERT INTO authors (first_name, last_name) VALUES (%s,%s) RETURNING id;', args)
-        data = self.cursor.fetchone()[0]
+        data = self.cursor.fetchone()
         self.connection.commit()
 
-        return data
+        return data['id']
 
     def delete_author(self, id):
         self.cursor.execute('DELETE FROM authors WHERE id=%s', (id,))
@@ -45,10 +45,10 @@ class BooksRepository:
 
     def add_one(self, *args):
         self.cursor.execute('INSERT INTO books (title, author_id, description) VALUES (%s,%s,%s) RETURNING id;', args)
-        book_id = self.cursor.fetchone()[0]
+        book_id = self.cursor.fetchone()
         self.connection.commit()
 
-        return book_id
+        return book_id['id']
 
     def delete_books(self, book_id):
         self.cursor.execute('DELETE FROM books WHERE id=%s', (book_id,))

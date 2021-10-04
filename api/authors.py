@@ -1,4 +1,6 @@
+from models import Authors
 from json import dumps, loads
+from pydantic import ValidationError
 from flask import Response, request, abort
 from api.repositories import AuthorsRepository
 
@@ -11,18 +13,23 @@ def index():
 
 
 def add():
+    repository = AuthorsRepository()
     user_data = loads(request.data.decode('utf-8'))
-    if len(user_data) == 2:
-        first_name = user_data.get('first_name')
-        last_name = user_data.get('last_name')
-        author = AuthorsRepository()
-        data = author.add_author(first_name, last_name)
+    try:
+        author = Authors(**user_data)
+        data = repository.add_author(author.first_name, author.last_name)
 
         return Response(dumps({
             "id": data
         }), mimetype='application/json', status=201)
 
-    abort(404, 'Wrong data, please input dictionary with first & last name only.')
+    except ValidationError as error:
+
+        return Response(
+            error.json(),
+            mimetype='application/json',
+            status=400
+        )
 
 
 def delete(author_id):
