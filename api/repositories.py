@@ -53,3 +53,21 @@ class BooksRepository:
     def delete_books(self, book_id):
         self.cursor.execute('DELETE FROM books WHERE id=%s', (book_id,))
         self.connection.commit()
+
+
+class UsersRepository:
+    def __init__(self):
+        self.connection = get_connection()
+        self.cursor = self.connection.cursor(cursor_factory=extras.RealDictCursor)
+
+    def get_by_username(self, username):
+        self.cursor.execute('SELECT user_name, password FROM users WHERE user_name=%s;', (username,))
+
+        return self.cursor.fetchone()
+
+    def save_new(self, username, password):
+        self.cursor.execute('INSERT INTO users(user_name,password) VALUES (%s,%s) RETURNING id;', (username, password))
+        user_id = self.cursor.fetchone()
+        self.connection.commit()
+
+        return user_id['id']

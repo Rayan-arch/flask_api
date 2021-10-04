@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>baza</title>
+</head>
+<style>
+    body {
+        background-color: #EBEBEB;
+    }
+    .div-1 {
+        width:330px;
+        height: 130px;
+        border:1px solid;
+        background-color: lightgray;
+        padding: 2px;
+        position: center;
+    }
+    .div-error {
+        background-color: gray;
+        text-color: red;
+    }
+    .div-name {
+        width: 125px;
+    }
+</style>
+<body>
+    {% block intro %}To jest wstęp{% endblock %}
+    {% block content %}{% endblock %}
+</body>
+</html>

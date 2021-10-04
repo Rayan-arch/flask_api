@@ -1,0 +1,43 @@
+{% extends 'base.html.jinja2' %}
+{% block intro %}
+    <h1>Rejestracja</h1>
+{% endblock %}
+{% block content %}
+    <div>Zarejestruj się</div>
+    <form method="POST" action="/register" class="div-1">
+        <div>
+            <label>{{form.username.label}}</label>
+            {{form.username()}}
+            {% if form.username.errors %}
+                {% for error in form.username.errors %}
+                    <div class="div-error">
+                        {{error}}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div>
+            <label>{{form.password.label}}</label>
+            {{form.password()}}
+            {% if form.password.errors %}
+                {% for error in form.password.errors %}
+                    <div class="div-error">
+                        {{error}}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <div>
+            <label>{{form.password_repeat.label}}</label>
+            {{form.password_repeat()}}
+            {% if form.password_repeat.errors %}
+                {% for error in form.password_repeat.errors %}
+                    <div class="div-error">
+                        {{error}}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
+        <button type="submit">Zarejestruj</button>
+    </form>
+{% endblock %}
