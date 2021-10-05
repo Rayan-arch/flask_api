@@ -1,7 +1,8 @@
 from hashlib import pbkdf2_hmac
-from flask import render_template, request
+from flask import render_template, request, abort, redirect
 from api.repositories import UsersRepository
 from forms import RegisterForm, LoginForm
+from flask_login import login_user, logout_user, login_required
 
 
 def crypt_password(password):
@@ -21,13 +22,25 @@ def login():
         username = form.username.data
         crypted_password = crypt_password(form.password.data)
         repository = UsersRepository()
-        data = repository.get_by_username(username)
-        print(data['password'])
-        print(crypted_password)
-        quit()
+        user = repository.get_by_username(username)
+
+        if user.password == crypted_password:
+            login_user(user)
+            return redirect('/home')
+        else:
+            abort(400)
+
 
     return render_template('login.html.jinja2', form=form)
 
+def logout():
+    logout_user()
+
+    return redirect('/login')
+
+@login_required
+def home():
+    return render_template('home.html.jinja2')
 
 def register():
     form = RegisterForm(request.form)
@@ -36,5 +49,6 @@ def register():
         password = crypt_password(form.password.data)
         repository = UsersRepository()
         repository.save_new(username, password)
+        return redirect('/login')
 
     return render_template('register.html.jinja2', form=form)

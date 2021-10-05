@@ -1,11 +1,13 @@
-from psycopg2 import extras
 from db import get_connection
+from psycopg2 import extras
+from auth import User
 
 
 class AuthorsRepository:
     def __init__(self):
         self.connection = get_connection()
         self.cursor = self.connection.cursor(cursor_factory=extras.RealDictCursor)
+
 
     def check_exists(self, author_id):
         self.cursor.execute('SELECT id, first_name, last_name FROM authors WHERE id = %s;', (author_id,))
@@ -60,10 +62,34 @@ class UsersRepository:
         self.connection = get_connection()
         self.cursor = self.connection.cursor(cursor_factory=extras.RealDictCursor)
 
-    def get_by_username(self, username):
-        self.cursor.execute('SELECT user_name, password FROM users WHERE user_name=%s;', (username,))
+    def map_row_to_user(self, row):
+        user = User()
+        if row is not None:
+            user.id = row['id']
+            user.username = row['user_name']
+            user.password = row['password']
 
-        return self.cursor.fetchone()
+        else:
+            user.id = None
+            user.username = None
+            user.password = None
+
+        return user
+
+    def get_by_id(self, user_id):
+        self.cursor.execute('SELECT id, user_name, password FROM users WHERE id=%s', (user_id))
+
+        return self.map_row_to_user(
+            self.cursor.fetchone()
+        )
+
+
+    def get_by_username(self, username):
+        self.cursor.execute('SELECT id, user_name, password FROM users WHERE user_name=%s;', (username,))
+
+        return self.map_row_to_user(
+            self.cursor.fetchone()
+        )
 
     def save_new(self, username, password):
         self.cursor.execute('INSERT INTO users(user_name,password) VALUES (%s,%s) RETURNING id;', (username, password))

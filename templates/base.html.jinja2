@@ -17,6 +17,7 @@
         position: center;
     }
     .div-error {
+        font-color: red;
         background-color: gray;
         text-color: red;
     }
@@ -25,6 +26,11 @@
     }
 </style>
 <body>
+    {% if current_user.is_authenticated %}
+        Witaj {{ current_user.username }}
+        <a href="/logout">Wyloguj</a>
+    {% endif %}
+
     {% block intro %}To jest wstęp{% endblock %}
     {% block content %}{% endblock %}
 </body>
