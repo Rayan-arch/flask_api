@@ -10,12 +10,18 @@ def init_app(app):
 
 def get_connection():
     if 'connection' not in g:
-        g.connection = psycopg2.connect(
-            dbname=getenv('DB_NAME', 'app'),
-            user=getenv('DB_USER', 'admin1'),
-            password=getenv('DB_PASSWORD', 'admin123'),
-            host=getenv('DB_HOST', 'db')
-        )
+        if getenv('DATABASE_URL', None) is not None:
+            g.connection = psycopg2.connect(
+                getenv('DATABASE_URL'),
+                sslmode='require'
+            )
+        else:
+            g.connection = psycopg2.connect(
+                dbname=getenv('DB_NAME', 'app'),
+                user=getenv('DB_USER', 'admin1'),
+                password=getenv('DB_PASSWORD', 'admin123'),
+                host=getenv('DB_HOST', 'db')
+            )
 
     return g.connection
 
