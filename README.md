@@ -1,5 +1,5 @@
 # Library
-- My first APi in flask
+- My first APi using Flask
 
 ## Author.
 - Grzegorz Plichta
